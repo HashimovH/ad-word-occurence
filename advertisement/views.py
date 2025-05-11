@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 
 from advertisement.forms import AudioUploadForm
 from advertisement.models import AudioFile
+from advertisement.utils import count_occurrences, transcribe_audio
 
 # Create your views here.
 
@@ -52,16 +53,14 @@ def upload_audio(request):
         if form.is_valid():
             audio = form.save(commit=False)
             audio.user = request.user
-
-            # # Save file temporarily
-            # file_path = audio.file.path
-
-            # # Process audio
-            # transcription = transcribe_audio(file_path)
-            # count = count_occurrences(transcription, audio.search_term)
-
+            audio.word_count = 0
             # Save result
-            audio.word_count = 10
+            audio.save()
+
+            # Process audio
+            transcription = transcribe_audio(audio.file.path)
+            count = count_occurrences(transcription, audio.search_term)
+            audio.word_count = count
             audio.save()
 
             return redirect('home')
